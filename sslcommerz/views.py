@@ -89,7 +89,7 @@ def ssl_payment_request(request, pk, id):
     
     post_body = {}
     post_body['total_amount'] = appointment.doctor.consultation_fee + appointment.doctor.report_fee
-    post_body['currency'] = "BDT"
+    post_body['currency'] = "Ksh"
     post_body['tran_id'] = generate_random_string()
 
     post_body['success_url'] = request.build_absolute_uri(
@@ -166,7 +166,7 @@ def ssl_payment_request_medicine(request, pk, id):
     
     post_body = {}
     post_body['total_amount'] = order.final_bill()
-    post_body['currency'] = "BDT"
+    post_body['currency'] = "Ksh"
     post_body['tran_id'] = generate_random_string()
 
     post_body['success_url'] = request.build_absolute_uri(
@@ -242,7 +242,7 @@ def ssl_payment_request_test(request, pk, id, pk2):
     
     post_body = {}
     post_body['total_amount'] = test_order.final_bill()
-    post_body['currency'] = "BDT"
+    post_body['currency'] = "Ksh"
     post_body['tran_id'] = generate_random_string()
 
     post_body['success_url'] = request.build_absolute_uri(
