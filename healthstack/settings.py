@@ -166,15 +166,18 @@ SMTP_PASSWORD = env('SMTP_PASSWORD', default='')
 
 # EMAIL
 
+# EMAIL SETTINGS FOR GMAIL
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.mailtrap.io'
-EMAIL_PORT = SMTP_PORT
-EMAIL_HOST_USER = SMTP_USER
-EMAIL_HOST_PASSWORD = SMTP_PASSWORD
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
 
 
+EMAIL_HOST_USER = 'chey45634@gmail.com' 
+
+
+EMAIL_HOST_PASSWORD = 'tlxrtfylflabflyj'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
