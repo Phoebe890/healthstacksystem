@@ -1,0 +1,66 @@
+================================================================================
+HEALTHSTACK SYSTEM - QUICK START GUIDE
+================================================================================
+
+CURRENT ISSUE: Dependencies need to be installed in the virtual environment.
+
+SOLUTION: Run these commands in PowerShell or CMD:
+
+================================================================================
+STEP-BY-STEP COMMANDS:
+================================================================================
+
+1. Navigate to project folder:
+   cd "c:\Users\salom\OneDrive\Desktop\tm chat\HealthStack-System"
+
+2. Activate virtual environment:
+   
+   PowerShell:
+   .\venv\Scripts\Activate.ps1
+   
+   CMD:
+   venv\Scripts\activate.bat
+
+3. Install all dependencies:
+   python -m pip install -r requirements.txt
+
+4. Install additional package:
+   python -m pip install --upgrade djangorestframework-simplejwt
+
+5. Run database migrations:
+   python manage.py migrate
+
+6. Start the server:
+   python manage.py runserver
+
+7. Open browser:
+   http://127.0.0.1:8000/
+
+================================================================================
+OR USE THE SETUP SCRIPT:
+================================================================================
+
+Just run:
+   .\setup.ps1
+
+This will do everything automatically!
+
+================================================================================
+IF YOU GET ERRORS:
+================================================================================
+
+- "Python was not found": Make sure you activated the venv first
+- "Execution policy error": Run: Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+- "Permission denied": Run PowerShell/CMD as Administrator
+- "ModuleNotFoundError": Make sure you ran step 3 (pip install)
+
+================================================================================
+WHAT'S ALREADY FIXED:
+================================================================================
+
+✅ .env file created with SECRET_KEY
+✅ settings.py updated with proper configurations
+✅ Virtual environment exists
+⏳ Just need to install dependencies (step 3 above)
+
+================================================================================
