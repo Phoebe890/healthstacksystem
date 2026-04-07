@@ -1,19 +1,20 @@
 from django.db.models import Q
-from .models import Patient, User, Hospital_Information
-from doctor.models import Doctor_Information, Appointment
-from hospital_admin.models import hospital_department, specialization, service
-
+from .models import Patient
 
 def searchPatients(request):
-    
     search_query = ''
     
+    # Get the search term from the URL (e.g., ?search_query=Phoebe)
     if request.GET.get('search_query'):
         search_query = request.GET.get('search_query')
         
-    #skills = Skill.objects.filter(name__icontains=search_query)
+    # We use Q objects to search multiple fields at once.
+    # distinct() prevents duplicate results if a query matches multiple fields.
+    patients = Patient.objects.distinct().filter(
+        Q(name__icontains=search_query) |           # Search by Name 
+        Q(phone_number__icontains=search_query) |   # Search by  Phone 
+        Q(nid__icontains=search_query) |            # Search by National ID
+        Q(patient_id__icontains=search_query)       # Search by System ID
+    )
     
-    patient = Patient.objects.filter(
-        Q(patient_id__icontains=search_query))
-    
-    return patient, search_query
+    return patients, search_query

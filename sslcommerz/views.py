@@ -105,8 +105,8 @@ def ssl_payment_request(request, pk, id):
     post_body['cus_email'] = patient.email
     post_body['cus_phone'] = patient.phone_number
     post_body['cus_add1'] = patient.address
-    post_body['cus_city'] = "Dhaka"
-    post_body['cus_country'] = "Bangladesh"
+    post_body['cus_city'] = "Nairobi"
+    post_body['cus_country'] = "Kenya"
     post_body['shipping_method'] = "NO"
     # post_body['multi_card_name'] = ""
     post_body['num_of_item'] = 1
@@ -182,8 +182,8 @@ def ssl_payment_request_medicine(request, pk, id):
     post_body['cus_email'] = patient.email
     post_body['cus_phone'] = patient.phone_number
     post_body['cus_add1'] = patient.address
-    post_body['cus_city'] = "Dhaka"
-    post_body['cus_country'] = "Bangladesh"
+    post_body['cus_city'] = "Nairobi"
+    post_body['cus_country'] = "Kenya"
     post_body['shipping_method'] = "NO"
     # post_body['multi_card_name'] = ""
     post_body['num_of_item'] = 1
@@ -258,8 +258,8 @@ def ssl_payment_request_test(request, pk, id, pk2):
     post_body['cus_email'] = patient.email
     post_body['cus_phone'] = patient.phone_number
     post_body['cus_add1'] = patient.address
-    post_body['cus_city'] = "Dhaka"
-    post_body['cus_country'] = "Bangladesh"
+    post_body['cus_city'] = "Nairobi"
+    post_body['cus_country'] = "Kenya"
     post_body['shipping_method'] = "NO"
     # post_body['multi_card_name'] = ""
     post_body['num_of_item'] = 1

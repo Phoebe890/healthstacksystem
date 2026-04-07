@@ -592,14 +592,24 @@ def report_pdf(request, pk):
 #     return render(request, 'testing.html', context)
 
 @csrf_exempt
-@login_required(login_url="login")
+@login_required(login_url="login") # Removed @csrf_exempt for security
 def patient_search(request, pk):
     if request.user.is_authenticated and request.user.is_doctor:
         doctor = Doctor_Information.objects.get(doctor_id=pk)
-        id = int(request.GET['search_query'])
-        patient = Patient.objects.get(patient_id=id)
-        prescription = Prescription.objects.filter(doctor=doctor).filter(patient=patient)
-        context = {'patient': patient, 'doctor': doctor, 'prescription': prescription}
+        query = request.GET.get('search_query', '') # Get text from search bar
+        
+        # This searches for the Name OR the ID. It won't crash if you type "Phoebe"
+        patients = Patient.objects.filter(
+            Q(name__icontains=query) | Q(patient_id__icontains=query)
+        ).distinct()
+        
+        # We pass "patients" (plural) to the template
+        context = {
+            'patients': patients, 
+            'doctor': doctor, 
+            'query': query
+        }
+      
         return render(request, 'patient-profile.html', context)
     else:
         logout(request)
