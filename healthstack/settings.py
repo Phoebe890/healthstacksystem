@@ -174,10 +174,8 @@ EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
 
 
-EMAIL_HOST_USER = 'chey45634@gmail.com' 
-
-
-EMAIL_HOST_PASSWORD = 'tlxrtfylflabflyj'
+EMAIL_HOST_USER = env('EMAIL_USER')
+EMAIL_HOST_PASSWORD = env('EMAIL_PASSWORD')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
