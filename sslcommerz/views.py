@@ -10,7 +10,7 @@ from hospital.models import Patient
 from pharmacy.models import Order, Cart
 from doctor.models import Appointment, Prescription, Prescription_test, testCart, testOrder 
 from django.contrib.auth.decorators import login_required
-
+from django.contrib import messages
 
 from django.core.mail import BadHeaderError, send_mail
 from django.template.loader import render_to_string
@@ -21,6 +21,8 @@ from django.utils.html import strip_tags
 # from .models import Patient, User
 from sslcommerz_lib import SSLCOMMERZ
 from django.conf import settings
+from django.utils import timezone  # Add this at the top of views.py
+import string
 
 
 STORE_ID = settings.STORE_ID
@@ -36,7 +38,9 @@ sslcz = SSLCOMMERZ(payment_settings)
 # Create your views here.
 
 
-
+def generate_mpesa_code():
+    """Generates a realistic 10-character M-Pesa transaction code"""
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
 def generate_random_string():
     N = 8
     string_var = ""
@@ -157,78 +161,82 @@ def ssl_payment_request(request, pk, id):
 
 @csrf_exempt
 def ssl_payment_request_medicine(request, pk, id):
-    # Payment Request for appointment payment
-    
+    # 1. Fetch Patient and Order
     patient = Patient.objects.get(patient_id=pk)
     order = Order.objects.get(id=id)
     
     invoice_number = generate_random_invoice()
+    # Generate M-Pesa style Transaction ID
+    tran_id = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10)) 
     
-    post_body = {}
-    post_body['total_amount'] = order.final_bill()
-    post_body['currency'] = "Ksh"
-    post_body['tran_id'] = generate_random_string()
+    # 2. Set the Time (Africa/Nairobi)
+    now = timezone.now() 
+    # Formatted for the message/email: 15/04/2026 at 10:55 PM
+    display_time = now.strftime("%d/%m/%Y at %I:%M %p") 
 
-    post_body['success_url'] = request.build_absolute_uri(
-        reverse('ssl-payment-success'))
-    post_body['fail_url'] = request.build_absolute_uri(
-        reverse('ssl-payment-fail'))
-    post_body['cancel_url'] = request.build_absolute_uri(
-        reverse('ssl-payment-cancel'))
-
-    post_body['emi_option'] = 0
-  
-    post_body['cus_name'] = patient.username
-    post_body['cus_email'] = patient.email
-    post_body['cus_phone'] = patient.phone_number
-    post_body['cus_add1'] = patient.address
-    post_body['cus_city'] = "Nairobi"
-    post_body['cus_country'] = "Kenya"
-    post_body['shipping_method'] = "NO"
-    # post_body['multi_card_name'] = ""
-    post_body['num_of_item'] = 1
-    post_body['product_name'] = "Test"
-    post_body['product_category'] = "Test Category"
-    post_body['product_profile'] = "general"
-
-    # Save in database
-    order.trans_ID = post_body['tran_id']
+    # 3. Update Order Record
+    order.trans_ID = tran_id
+    order.payment_status = "VALID"
     order.save()
     
+    # 4. Create Payment Record 
     payment = Payment()
-    # payment.patient_id = patient.patient_id
-    # payment.appointment_id = appointment.id
     payment.patient = patient
-    # payment.appointment = appointment
-    payment.name = post_body['cus_name']
-    payment.email = post_body['cus_email']
-    payment.phone = post_body['cus_phone']
-    payment.address = post_body['cus_add1']
-    payment.city = post_body['cus_city']
-    payment.country = post_body['cus_country']
-    payment.transaction_id = post_body['tran_id']
-    
-    # payment.consulation_fee = appointment.doctor.consultation_fee
-    # payment.report_fee = appointment.doctor.report_fee
+    payment.transaction_id = tran_id
     payment.invoice_number = invoice_number
-    
-    payment_type = "pharmacy"
-    payment.payment_type = payment_type
+    payment.payment_type = "pharmacy"
+    payment.status = "VALID"
+    payment.currency_amount = order.final_bill()
+    payment.card_type = "M-Pesa" 
+    payment.bank_transaction_id = tran_id
+    payment.transaction_date = display_time # This fixes the time in the database
+    payment.card_issuer = "Safaricom"
     payment.save()
+
+    # 5. Clear the Cart items for this order
+    Cart.objects.filter(order=order).delete()
+
+    # 6. EMAIL LOGIC
+    patient_email = patient.email
+    ob = Cart.objects.filter(order=order) # Note: query this before deleting if you need item details
+    order_cart = [item for item in ob]
+    
+    subject = f"Payment Receipt: {tran_id} (M-Pesa)"
     
     
-    response = sslcz.createSession(post_body)  # API response
-    print(response)
+    values = {
+        "email": patient_email,
+        "name": patient.name,
+        "username": patient.username,
+        "phone_number": patient.phone_number,
+        "tran_id": tran_id,
+        "currency_amount": f"KSh {order.final_bill()}",
+        "card_type": "M-Pesa",
+        "bank_transaction_id": tran_id,
+        "transaction_date": display_time, 
+        "card_issuer": "Safaricom M-Pesa",
+        "order_cart": order_cart,
+    }
+    
+    html_message = render_to_string('pharmacy_mail_payment_template.html', {'values': values})
+    plain_message = strip_tags(html_message)
+    
+    try:
+        send_mail(
+            subject, 
+            plain_message, 
+            settings.EMAIL_HOST_USER, 
+            [patient_email], 
+            html_message=html_message, 
+            fail_silently=False
+        )
+    except Exception as e:
+        print(f"Email failed: {e}")
 
-    gateway_url = response.get('GatewayPageURL')
-    if gateway_url:
-        return redirect(gateway_url)
-    # Fallback if gateway URL is missing or empty
-    return HttpResponse(
-        "Payment gateway URL not returned. Please check SSLCommerz configuration or try again later.",
-        status=502,
-    )
-
+    # 7. SUCCESS MESSAGE (M-Pesa Style)
+    messages.success(request, f"Confirmed. {tran_id} KSh {order.final_bill()} paid to HealthStack for Invoice {invoice_number} on {display_time}.")
+    
+    return redirect('patient-dashboard')
 
 @csrf_exempt
 def ssl_payment_request_test(request, pk, id, pk2):
